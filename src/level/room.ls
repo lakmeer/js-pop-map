@@ -24,6 +24,6 @@ export class PopRoom
     for i from 0 til POP_ROOM_SIZE
       x = i % 10
       y = i `div` 10
-      @foretiles[y][x] = new ForeTile @forebuffer[i]
-      @backtiles[y][x] = new BackTile @backbuffer[i]
+      @foretiles[y][x] = new ForeTile @forebuffer[i], x, y
+        #@backtiles[y][x] = new BackTile @backbuffer[i], x, y
 
