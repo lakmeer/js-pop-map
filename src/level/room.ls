@@ -45,13 +45,12 @@ export class PopRoom
           image = Assets.get tile.name
 
           if Assets.is-none image
-            void
-          else if image
-            @draw-image image, tile.x * tile-x, tile.y * tile-y
-          else
             @fill-style = \white
             @stroke-text tile.code.to-string(16), tile.x * tile-x + tile-x, tile.y * tile-y + tile-y * 0.7
             @fill-text   tile.code.to-string(16), tile.x * tile-x + tile-x, tile.y * tile-y + tile-y * 0.7
+            void
+          else
+            @draw-image image, tile.x * tile-x, tile.y * tile-y
 
   blit-to: (target, x, y) ->
     target.ctx.draw-image @blitter.canvas, x, y

@@ -9,7 +9,7 @@ load-img = (src) -> i = new Image; i.src = \/tiles/ + src + \.png; return i
 # Load all assets
 
 sprites =
-  null       : new Image
+  null       : ""
   blank      : new Image
   wall       : load-img \wall
   torch      : load-img \torch
