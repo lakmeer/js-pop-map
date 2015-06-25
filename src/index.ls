@@ -16,7 +16,7 @@
 level-data = {}
 
 xhr = new XMLHttpRequest
-xhr.open \GET, "levels/01.plv", true
+xhr.open \GET, "levels/02.plv", true
 xhr.response-type = \arraybuffer
 xhr.send!
 xhr.onload = ->
@@ -57,7 +57,8 @@ xhr.onload = ->
 
   sort-by-drawing-order = (raw-coords) ->
     neat-coords = [ { index, x, y } for index, { x, y } of raw-coords ]
-    rows = reverse values group-by (.y), neat-coords
+    rows = values group-by (.y), neat-coords
+    rows.sort (a, b) -> a.0.y < b.0.y
     rows.map (.sort (a, b) -> a.x > b.x)
     return rows
 
