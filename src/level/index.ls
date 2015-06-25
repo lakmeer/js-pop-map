@@ -56,7 +56,7 @@ export class PopLevel
   spec-slice = (buffer, chunk) ->
     buffer.subarray chunk.offset, chunk.offset + chunk.length
 
-  (raw) ->
+  (raw, sprite-set) ->
     log "new PopLevel"
 
     # Prepare raw PLV data to be read
@@ -64,15 +64,22 @@ export class PopLevel
     @data = @full.subarray POP_PREAMBLE_OFFSET + 1, @full.length - POP_PREAMBLE_OFFSET
 
     # Parse out the bits we care about
-    @rooms  = @extract-rooms @data
+    @rooms  = @extract-rooms @data, sprite-set
     @links  = @extract-links @data
     @start  = @extract-start @data
 
-  extract-rooms: (buffer) ->
+  extract-rooms: (buffer, sprite-set) ->
+    log \xr sprite-set.get
     rooms = for i from 0 to 24
       start-index = spec.foretable.offset + i * POP_ROOM_SIZE
       end-index   = start-index + POP_ROOM_SIZE
-      new PopRoom i + 1, buffer.subarray start-index, end-index
+
+      new PopRoom do
+        index: i + 1
+        forebuffer: buffer.subarray start-index, end-index
+        backbuffer: null
+        sprite-set: sprite-set
+
     rooms.unshift PopRoom.NullRoom
     return rooms
 

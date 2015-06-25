@@ -1,9 +1,9 @@
 
 # Require
 
-{ id, log, keys, random-from, delay, every, group-by, values, reverse } = require \std
+{ id, log, keys, floor, random-from, delay, every, group-by, values, reverse } = require \std
 
-{ Assets }   = require \./assets
+{ Dungeon }  = require \./assets
 { Blitter }  = require \./blitter
 { PopLevel } = require \./level
 
@@ -16,12 +16,12 @@
 level-data = {}
 
 xhr = new XMLHttpRequest
-xhr.open \GET, "levels/02.plv", true
+xhr.open \GET, "levels/04.plv", true
 xhr.response-type = \arraybuffer
 xhr.send!
 xhr.onload = ->
 
-  level-data  := new PopLevel @response
+  level-data  := new PopLevel @response, Dungeon
   main-blitter = new Blitter window.inner-width, window.inner-height
 
   # Draw some assets
@@ -76,11 +76,15 @@ xhr.onload = ->
       level-data.rooms[that].blit-to main-blitter, ox + x, oy + y
 
   draw-all-rooms = (coord-rows, px, py) ->
+    cx = floor (main-blitter.canvas.width - tile-x * room-width) / 2
+    cy = floor (main-blitter.canvas.height - tile-y * room-height) / 2
+
     for row in coord-rows
       for { index, x, y } in row
         rx = tile-x * room-width * x
         ry = tile-y * room-height * y
-        level-data.rooms[index].blit-to main-blitter, rx + px, ry + py
+        level-data.rooms[index].blit-to main-blitter, cx + rx + px, cy + ry + py
+
 
 
   # State

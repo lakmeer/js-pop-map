@@ -5,10 +5,10 @@
 
 { tile-x, tile-y, tiles-per-room, tile-overlap, room-width, room-height } = require \../config
 
-{ Assets }   = require \../assets
-{ Blitter }  = require \../blitter
+{ is-none } = require \../assets
+{ Blitter } = require \../blitter
 
-{ ForeTile } = require \./foretile
+{ ForeTile }  = require \./foretile
 #{ BackTile } = require \./backtile
 
 
@@ -20,11 +20,12 @@
 
 export class PopRoom
 
-  (@index, @forebuffer, @backbuffer) ->
-    @foretiles = [[], [], []]
-    @backtiles = [[], [], []]
+  ({ @index, @forebuffer, @backbuffer, @sprite-set }) ->
 
     @blitter = new Blitter tile-x * (room-width + 1), tile-y * room-height + tile-overlap
+
+    @foretiles = [[], [], []]
+    @backtiles = [[], [], []]
 
     for i from 0 til tiles-per-room
       x = i % room-width
@@ -36,15 +37,16 @@ export class PopRoom
 
   render: ->
     tiles = @foretiles
+    sprites = @sprite-set
 
     @blitter.draw-with ->
       for row-ix from 2 to 0
         row = tiles[row-ix]
 
         for tile in row
-          image = Assets.get tile.name
+          image = sprites.get tile.name
 
-          if Assets.is-none image
+          if is-none image
             @fill-style = \white
             @stroke-text tile.code.to-string(16), tile.x * tile-x + tile-x, tile.y * tile-y + tile-y * 0.7
             @fill-text   tile.code.to-string(16), tile.x * tile-x + tile-x, tile.y * tile-y + tile-y * 0.7
