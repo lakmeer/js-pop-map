@@ -1,19 +1,17 @@
 
 # Require
 
-{ id, log, keys, random-from, delay, every } = require \std
+{ id, log, keys, random-from, delay, every, group-by, values, reverse } = require \std
 
 { Assets }   = require \./assets
+{ Blitter }  = require \./blitter
 { PopLevel } = require \./level
 
+{ tile-x, tile-y, tiles-per-room, room-width, room-height } = require \./config
 
 #
 # Program index
 #
-
-# Create assets lib
-# Create mock level layout
-# Load a PLV file
 
 level-data = {}
 
@@ -22,115 +20,82 @@ xhr.open \GET, "levels/01.plv", true
 xhr.response-type = \arraybuffer
 xhr.send!
 xhr.onload = ->
-  level-data := new PopLevel @response
 
-  # Level grid size
-  zx = 32
-  zy = 63
-  zz = 10
+  level-data  := new PopLevel @response
+  main-blitter = new Blitter window.inner-width, window.inner-height
 
   # Draw some assets
-  canvas = document.create-element \canvas
-  canvas.width = 10 * zx
-  canvas.height = 3 * zy + 2
-  ctx = canvas.get-context \2d
-  document.body.append-child canvas
-
-  ctx.text-baseline = \middle
-  ctx.text-align = \center
-  ctx.font = "16px monospace"
-
-  colors = <[ black black red darkcyan yellow green blue cyan purple pink
-              white black red purple grey green blue cyan pink orange
-              cyan black red orange yellow green blue cyan purple pink ]>
-
-  load-img = (src) -> i = new Image; i.src = \/tiles/ + src + \.png; return i
-
-  none       = {}
-  wall       = load-img \wall
-  torch      = load-img \torch
-  floor      = load-img \floor
-  pillar     = load-img \pillars
-  debris     = load-img \debris
-  unstable   = load-img \unstable
-  gate       = load-img \gate
-  plate      = load-img \plate
-  red        = load-img \potion-red
-  slam       = load-img \slam
-  spikes     = load-img \spikes
-  exit-left  = load-img \exit-left
-  exit-right = load-img \exit-right
-  skeleton   = load-img \skeleton
-  sword      = load-img \sword
 
   get-room-offsets = ->
     switch it
-    | \up    => { x: 0, y: zy * -3 }
-    | \down  => { x: 0, y: zy *  3 }
-    | \left  => { x: zx * -10, y: 0 }
-    | \right => { x: zx *  10, y: 0 }
+    | \up    => { x: 0, y: tile-y * -room-height }
+    | \down  => { x: 0, y: tile-y *  room-height }
+    | \left  => { x: tile-x * -room-width, y: 0 }
+    | \right => { x: tile-x *  room-width, y: 0 }
+
+  get-room-coords = (dir, { x, y }) ->
+    switch dir
+    | \up    => { x, y: y - 1 }
+    | \down  => { x, y: y + 1 }
+    | \left  => { x: x - 1, y }
+    | \right => { x: x + 1, y }
+    | otherwise => console.error 'What?'
+
+  discover-room-positions = (room) ->
+    coords = []
+    coords[room] = { x: 0, y: 0 }
+
+    fetch-unresolved = (room) ->
+      links = level-data.links[room]
+      for dir, index of links when index > 0
+        if not coords[index]
+          coords[index] = get-room-coords dir, coords[room]
+          fetch-unresolved index
+
+    fetch-unresolved room
+    sort-by-drawing-order coords
+
+  sort-by-drawing-order = (raw-coords) ->
+    neat-coords = [ { index, x, y } for index, { x, y } of raw-coords ]
+    rows = reverse values group-by (.y), neat-coords
+    rows.map (.sort (a, b) -> a.x > b.x)
+    return rows
+
+  draw-room-with-neighbours = (room, ox, oy) ->
+    links = level-data.links[room]
+    draw-neighbour links, \down, ox, oy
+    draw-neighbour links, \left, ox, oy
+    level-data.rooms[room].blit-to main-blitter, ox, oy
+    draw-neighbour links, \right, ox, oy
+    draw-neighbour links, \up, ox, oy
 
   draw-neighbour = (links, dir, ox, oy) ->
     if links[dir]
       { x, y } = get-room-offsets dir
-      draw-room that, ox + x, oy + y
+      level-data.rooms[that].blit-to main-blitter, ox + x, oy + y
 
-  draw-room-with-neighbours = (room, ox, oy) ->
-    ctx.clear-rect 0, 0, 400, 400
-    links = level-data.links[room]
-    draw-neighbour links, \down, ox, oy
-    draw-neighbour links, \left, ox, oy
-    draw-room room, ox, oy
-    draw-neighbour links, \right, ox, oy
-    draw-neighbour links, \up, ox, oy
-
-  draw-room = (room, ox, oy) ->
-    log "Draw room:", room, "at", ox, oy
-    tiles = level-data.rooms[room].foretiles
-    draw-room-tiles tiles, ox, oy
-
-  draw-room-tiles = (tile-rows, ox, oy) ->
-    for row-ix from 2 to 0
-      row = tile-rows[row-ix]
-      for tile in row
-        image = switch tile.name
-        | "Empty"        => none
-        | "Torch"        => torch
-        | "Spikes"       => spikes
-        | "Wall"         => wall
-        | "Floor"        => floor
-        | "Pillar"       => pillar
-        | "Debris"       => debris
-        | "Loose Board"  => unstable
-        | "Gate"         => gate
-        | "Potion"       => red
-        | "Raise Button" => plate
-        | "Drop Button"  => slam
-        | "Exit Left"    => exit-left
-        | "Exit Right"   => exit-right
-        | "Skeleton"     => skeleton
-        | "Sword"        => sword
-        | otherwise      => null
-
-        if image is none
-          void
-        else if image
-          ctx.draw-image image, tile.x * zx + ox, tile.y * zy - zz + oy
-        else
-          ctx.fill-style = \white
-          ctx.stroke-text tile.code.to-string(16), tile.x * zx + zx + ox, tile.y * zy + zy * 0.7 + oy
-          ctx.fill-text   tile.code.to-string(16), tile.x * zx + zx + ox, tile.y * zy + zy * 0.7 + oy
+  draw-all-rooms = (coord-rows, px, py) ->
+    for row in coord-rows
+      for { index, x, y } in row
+        rx = tile-x * room-width * x
+        ry = tile-y * room-height * y
+        level-data.rooms[index].blit-to main-blitter, rx + px, ry + py
 
 
+  # State
 
-  pan        = { x: 0, y: 0 }
-  last-mouse = { x: 0, y: 0 }
-  dragging   = off
+  pan         = { x: 0, y: 0 }
+  last-mouse  = { x: 0, y: 0 }
+  dragging    = off
+  room-coords = discover-room-positions level-data.start.room
 
-  canvas.add-event-listener \mousedown, -> dragging := on
-  canvas.add-event-listener \mouseup,   -> dragging := off
 
-  canvas.add-event-listener \mousemove, (event) ->
+  # Listeners
+
+  main-blitter.on \mousedown, -> dragging := on
+  main-blitter.on \mouseup,   -> dragging := off
+
+  main-blitter.on \mousemove, (event) ->
     Δx = last-mouse.x - event.offset-x
     Δy = last-mouse.y - event.offset-y
 
@@ -138,28 +103,16 @@ xhr.onload = ->
     last-mouse.y = event.offset-y
 
     if dragging
-      log \dragging
-
       pan.x -= Δx
       pan.y -= Δy
-
-      draw-room-with-neighbours level-data.start.room, pan.x, pan.y
-
-  delay 100, -> draw-room-with-neighbours level-data.start.room, pan.x, pan.y
+      main-blitter.clear!
+      draw-all-rooms room-coords, pan.x, pan.y
 
 
-# Navigate rooms my keys
+  # Init
 
+  main-blitter.install document.body
 
-# Minimap
-
-
-# Pan with mouse drag
-
-
-# Load other levels
-
-
-# Begin
+  delay 100, -> draw-all-rooms room-coords, 0, 0
 
 

@@ -5,7 +5,6 @@
 
 { PopRoom } = require \./room
 
-
 #
 # PopLevel
 #
@@ -73,7 +72,7 @@ export class PopLevel
     rooms = for i from 0 to 24
       start-index = spec.foretable.offset + i * POP_ROOM_SIZE
       end-index   = start-index + POP_ROOM_SIZE
-      new PopRoom buffer.subarray start-index, end-index
+      new PopRoom i + 1, buffer.subarray start-index, end-index
     rooms.unshift PopRoom.NullRoom
     return rooms
 
