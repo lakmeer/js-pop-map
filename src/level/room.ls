@@ -39,14 +39,15 @@ export class PopRoom
     tiles = @foretiles
     sprites = @sprite-set
 
+    @blitter.clear!
     @blitter.draw-with ->
       for row-ix from 2 to 0
         row = tiles[row-ix]
 
         for tile in row
-          image = sprites.get tile.name
+          image = sprites.get tile
 
-          if is-none image
+          if is-none image or not image
             @fill-style = \white
             @stroke-text tile.code.to-string(16), tile.x * tile-x + tile-x, tile.y * tile-y + tile-y * 0.7
             @fill-text   tile.code.to-string(16), tile.x * tile-x + tile-x, tile.y * tile-y + tile-y * 0.7
@@ -57,5 +58,9 @@ export class PopRoom
   blit-to: (target, x, y) ->
     target.ctx.draw-image @blitter.canvas, x, y
 
+  @NullRoom =
+    render: id
+    blit-to: id
+    index: 0
 
 

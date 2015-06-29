@@ -3,7 +3,7 @@
 
 { id, log, keys, floor, random-from, delay, every, group-by, values, reverse } = require \std
 
-{ Dungeon }  = require \./assets
+{ Dungeon, Palace }  = require \./assets
 { Blitter }  = require \./blitter
 { PopLevel } = require \./level
 
@@ -21,7 +21,7 @@ xhr.response-type = \arraybuffer
 xhr.send!
 xhr.onload = ->
 
-  level-data  := new PopLevel @response, Dungeon
+  level-data  := new PopLevel @response, Palace
   main-blitter = new Blitter window.inner-width, window.inner-height
 
   # Draw some assets
@@ -47,7 +47,7 @@ xhr.onload = ->
 
     fetch-unresolved = (room) ->
       links = level-data.links[room]
-      for dir, index of links when index > 0
+      for dir, index of links
         if not coords[index]
           coords[index] = get-room-coords dir, coords[room]
           fetch-unresolved index
@@ -76,6 +76,9 @@ xhr.onload = ->
       level-data.rooms[that].blit-to main-blitter, ox + x, oy + y
 
   draw-all-rooms = (coord-rows, px, py) ->
+
+    main-blitter.clear!
+
     cx = floor (main-blitter.canvas.width - tile-x * room-width) / 2
     cy = floor (main-blitter.canvas.height - tile-y * room-height) / 2
 
@@ -85,6 +88,9 @@ xhr.onload = ->
         ry = tile-y * room-height * y
         level-data.rooms[index].blit-to main-blitter, cx + rx + px, cy + ry + py
 
+  update-room-renders = ->
+    for room in level-data.rooms
+      room.render!
 
 
   # State
@@ -118,6 +124,7 @@ xhr.onload = ->
 
   main-blitter.install document.body
 
-  delay 100, -> draw-all-rooms room-coords, 0, 0
-
+  delay 1000, ->
+    update-room-renders!
+    draw-all-rooms room-coords, 0, 0
 

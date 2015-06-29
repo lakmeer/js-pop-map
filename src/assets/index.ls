@@ -17,7 +17,7 @@ export is-none = (is null-sprite)
 
 getter = (sprites) ->
   get: ->
-    switch it
+    switch it.name
     | "Empty"             => sprites.blank
     | "Torch"             => sprites.torch
     | "Spikes"            => sprites.spikes
@@ -38,7 +38,12 @@ getter = (sprites) ->
     | "Tapestry Top"      => sprites.tapestry-top
     | "Top Big-pillar"    => sprites.column-top
     | "Bottom Big-pillar" => sprites.column-btm
-    | otherwise           => log it; null-sprite
+    | "Lattice Pillar"    => sprites.lattice-pillar
+    | "Lattice Support"   => sprites.lattice-support
+    | "Small Lattice"     => sprites.lattice-small
+    | "Lattice Left"     => sprites.lattice-left
+    | "Lattice Right"     => sprites.lattice-right
+    | otherwise           => log it.name, it.code.to-string 16; null-sprite
 
 
 # Define sprite sets
@@ -65,25 +70,30 @@ export Dungeon = getter do
   chopper    : load-img \dungeon/chopper
   tapestry-top: load-img \dungeon/tapestry-top
 
-export Palace = getter {}
-  #blank      : new Image
-  #wall       : load-img \palace/wall
-  #torch      : load-img \palace/torch
-  #floor      : load-img \palace/floor
-  #pillar     : load-img \palace/pillars
-  #debris     : load-img \palace/debris
-  #unstable   : load-img \palace/unstable
-  #gate       : load-img \palace/gate
-  #plate      : load-img \palace/plate
-  #red        : load-img \palace/potion-red
-  #slam       : load-img \palace/slam
-  #spikes     : load-img \palace/spikes
-  #exit-left  : load-img \palace/exit-left
-  #exit-right : load-img \palace/exit-right
-  #skeleton   : load-img \palace/skeleton
-  #sword      : load-img \palace/sword
-  #column-top : load-img \palace/columns-top
-  #column-btm : load-img \palace/columns-btm
-  #chopper    : load-img \palace/chopper
-  #tapestry-top: load-img \palace/tapestry-top
+export Palace = getter do
+  blank           : new Image
+  wall            : load-img \palace/wall
+  torch           : load-img \palace/torch
+  floor           : load-img \palace/floor
+  pillar          : load-img \palace/pillars
+  debris          : load-img \palace/debris
+  unstable        : load-img \palace/unstable
+  gate            : load-img \palace/gate
+  plate           : load-img \palace/plate
+  red             : load-img \palace/potion-red
+  slam            : load-img \palace/slam
+  spikes          : load-img \palace/spikes
+  exit-left       : load-img \palace/exit-left
+  exit-right      : load-img \palace/exit-right
+  #skeleton       : load-img \palace/skeleton
+  #sword          : load-img \palace/sword
+  #column-top     : load-img \palace/columns-top
+  #column-btm     : load-img \palace/columns-btm
+  chopper         : load-img \palace/chopper
+  tapestry-top    : load-img \palace/tapestry-top
+  lattice-pillar  : load-img \palace/lattice-pillar
+  lattice-support : load-img \palace/lattice-support
+  lattice-small   : load-img \palace/lattice-small
+  lattice-left    : load-img \palace/lattice-left
+  lattice-right   : load-img \palace/lattice-right
 
